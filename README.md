@@ -8,10 +8,17 @@ When the stream runs out of bits, the salt callback is invoked for more entropy 
 This can be used for procedural noise generation, because seed values can be specified and will re-generate the same stream of bits.
 By feeding a source of randomness (the low milliseconds of a clock for instance) a bit of entropy is added... in this case 10 bits or so, which isn't very much.  Other sources of entropy may be used from other generators, or maybe another longer running generator with its own cycle?
 
-salty_random_generator.js usage
+salty_random_generator2 usage
+
+This may be included as either a esm module or cjs module.
 
 ```
-  var SRG = require( 'salty_random_generator' );
+   import {SaltyRNG as SRG} from "@d3x0r/srg2";
+
+```
+
+```
+  var SRG = require( '@d3x0r/srg2' );
   var RNG = SRG.SaltyRNG( saltingCallback );
   function saltingCallback( salt ) {
       //salt is an array.
@@ -106,13 +113,5 @@ ALL: [Module: null prototype] {
 
 
 # Changelog
-- 1.2.2
-   - Fixed regression building K12.
-- 1.2.1
-   - Merge utility work
-- 1.2.0
-   - Release as module version.  (1.2.x family)
-- 1.0.1 (unrelesed?)
-   - Release with a module version, 'export {X}' instead of 'exports.X='
 - 1.0.0 
    - Initial version
