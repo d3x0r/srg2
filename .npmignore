@@ -1,0 +1,14 @@
+.gitignore
+.npmignore
+*.tgz
+*~
+build
+build-*
+build.log
+err
+tests
+test
+xx
+zz
+.vscode
+*.tgz
