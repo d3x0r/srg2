@@ -78,8 +78,8 @@ RNG.saltbuf = [] // the array that is used to communicate salt when more random 
 ## test.js output
 
 ```
-import  {SaltyRNG} from "@d3x0r/srg";
-//import  {SaltyRNG} from "/node_modules/@d3x0r/srg/salty_random_generator.js";
+import  {SaltyRNG} from "@d3x0r/srg2";
+//import  {SaltyRNG} from "/node_modules/@d3x0r/srg2/salty_random_generator2.mjs";
 
 SaltyRNG: [Function: SaltyRNG] {
   Shuffler: [Function: Shuffler],
@@ -96,7 +96,7 @@ SaltyRNG: [Function: SaltyRNG] {
   u8xor: [Function: u8xor]
 }
 
-import ALL from "@d3x0r/srg"
+import ALL from "@d3x0r/srg2"
 
 ALL: [Module: null prototype] {
   GetCurrentTick: [Function: GetCurrentTick],
