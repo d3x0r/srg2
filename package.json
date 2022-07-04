@@ -24,8 +24,5 @@
   "bugs": {
     "url": "https://github.com/d3x0r/srg2/issues"
   },
-  "homepage": "https://github.com/d3x0r/srg#readme",
-  "dependencies": {
-    "@d3x0r/srg2": "file:C:/Users/Panther/AppData/Roaming/npm/node_modules/@d3x0r/srg2"
-  }
+  "homepage": "https://github.com/d3x0r/srg#readme"
 }
