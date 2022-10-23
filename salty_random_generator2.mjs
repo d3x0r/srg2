@@ -386,6 +386,7 @@ function hexToBytes(hex) {
 function toBytes(data) {
     if (typeof data === 'string')
         data = utf8ToBytes(data);
+	 if (data instanceof Uint32Array) data = new Uint8Array( data );
     if (!(data instanceof Uint8Array))
         throw new TypeError(`Expected input type is Uint8Array (got ${typeof data})`);
     return data;
@@ -1736,10 +1737,14 @@ ID IS: Uint8Array(32) [
 ]
  2327404  tmm7PQ5pkw8gYxbvPnBEaKRAexPIesQQJl9Xt9t7xos=
  */
+	if( false ) {
         	console.log( "Getting a signature for 'Hello World'..." );
             const testSignature = SaltyRNG.sign( "Hello World" );
 
         console.log( "Signature:", testSignature, SaltyRNG.verify( "Hello World", testSignature ) );
+		// there are multiple valid signatures; it's a race to be the first; and tell others about your findings.
+		// 
+	}
 /*
 if( false ) {
 	function test(a,b) {
