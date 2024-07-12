@@ -1,6 +1,6 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
+const _assert = false;
 
 // usage
 //  var RNG = require( "salty_random_generator")( callback }
@@ -97,6 +97,7 @@ function SaltyRNG(f, opt) {
 		feed(buf) {
 			//if( typeof buf === "string" )
 			//	buf = toUTF8Array( buf );
+			console.log( "Feed RNG:", buf );
 			k12buf2.update(buf);
 		},
 		saltbuf: [],
@@ -254,7 +255,8 @@ function SaltyRNG(f, opt) {
 		}else console.log( "Not squeezing so all is bad?" );
 		RNG.available = RNG.entropy.length * 8;
 		RNG.used = 0;
-	}	RNG.reset();
+	}	
+	RNG.reset();
 	return RNG;
 }
 
@@ -288,6 +290,7 @@ function toBytes(data) {
         throw new TypeError(`Expected input type is Uint8Array (got ${typeof data})`);
     return data;
 }
+
 function assertNumber(n) {
     if (!Number.isSafeInteger(n) || n < 0)
         throw new Error(`Wrong positive integer: ${n}`);
@@ -298,9 +301,6 @@ const u32 = (arr) => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.
 
 class Hash {
     // Safe version that clones internal state
-    clone() {
-        return this._cloneInto();
-    }
 }
 function assertBytes(bytes, ...lengths) {
     if (!(bytes instanceof Uint8Array))
@@ -315,7 +315,7 @@ function assertExists(instance, checkFinished = true) {
         throw new Error('Hash#digest() has already been called');
 }
 function assertOutput(out, instance) {
-    assertBytes(out);
+    _assert && assertBytes(out);
     const min = instance.outputLen;
     if (out.length < min) {
         throw new Error(`digestInto() expects output buffer of length at least ${min}`);
@@ -323,7 +323,6 @@ function assertOutput(out, instance) {
 }
 
 
-//import { Hash, u32, toBytes, wrapConstructor, wrapConstructorWithOpts, assertBytes, assertNumber, assertExists, assertOutput, } from './utils.js';
 const u64= {
     U32_MASK64 : 2n ** 32n - 1n
     ,fromBig(n, le = false) {
@@ -383,6 +382,9 @@ const _2n = BigInt(2);
 const _7n = BigInt(7);
 const _256n = BigInt(256);
 const _0x71n = BigInt(0x71);
+const security = 128;
+const capacity = (2*security);
+
 for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
     // Pi
     [x, y] = [y, (2 * x + 3 * y) % 5];
@@ -399,10 +401,17 @@ for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
     _SHA3_IOTA.push(t);
 }
 const [SHA3_IOTA_H, SHA3_IOTA_L] = u64.split(_SHA3_IOTA, true);
+function rightEncodeK12(n) {
+    const res = [];
+    for (; n > 0; n >>= 8)
+        res.unshift(n & 0xff);
+    res.push(res.length);
+    return new Uint8Array(res);
+}
 
 class Keccak extends Hash {
     // NOTE: we accept arguments in bytes instead of bits here.
-    constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 24) {
+    constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 12) {
         super();
         this.blockLen = blockLen;
         this.suffix = suffix;
@@ -414,7 +423,7 @@ class Keccak extends Hash {
         this.finished = false;
         this.destroyed = false;
         // Can be passed from user as dkLen
-        assertNumber(outputLen);
+        _assert && assertNumber(outputLen);
         // 1600 = 5x5 matrix of 64bit.  1600 bits === 200 bytes
         if (0 >= this.blockLen || this.blockLen >= 200)
             throw new Error('Sha3 supports only keccak-f1600 function');
@@ -474,7 +483,7 @@ class Keccak extends Hash {
         this.pos = 0;
     }
     update(data) {
-        assertExists(this);
+        _assert && assertExists(this);
         const { blockLen, state } = this;
         data = toBytes(data);
         const len = data.length;
@@ -482,14 +491,17 @@ class Keccak extends Hash {
             const take = Math.min(blockLen - this.pos, len - pos);
             for (let i = 0; i < take; i++)
                 state[this.pos++] ^= data[pos++];
-            if (this.pos === blockLen)
+            if (this.pos === blockLen) {
                 this.keccak();
+				}
         }
         return this;
     }
     finish() {
-        if (this.finished)
+        if (this.finished) {
+				console.log( "is already finished??" );
             return;
+			}
         this.finished = true;
         const { state, suffix, pos, blockLen } = this;
         // Do the padding
@@ -500,14 +512,15 @@ class Keccak extends Hash {
         this.keccak();
     }
     writeInto(out) {
-        assertExists(this, false);
-        assertBytes(out);
+        _assert && assertExists(this, false);
+        _assert && assertBytes(out);
         this.finish();
         const bufferOut = this.state;
         const { blockLen } = this;
         for (let pos = 0, len = out.length; pos < len;) {
-            if (this.posOut >= blockLen)
+            if (this.posOut >= blockLen) {
                 this.keccak();
+				}
             const take = Math.min(blockLen - this.posOut, len - pos);
             out.set(bufferOut.subarray(this.posOut, this.posOut + take), pos);
             this.posOut += take;
@@ -522,11 +535,11 @@ class Keccak extends Hash {
         return this.writeInto(out);
     }
     xof(bytes) {
-        assertNumber(bytes);
+        _assert && assertNumber(bytes);
         return this.xofInto(new Uint8Array(bytes));
     }
     digestInto(out) {
-        assertOutput(out, this);
+        _assert && assertOutput(out, this);
         if (this.finished)
             throw new Error('digest() was already called');
         this.writeInto(out);
@@ -540,87 +553,67 @@ class Keccak extends Hash {
         this.destroyed = true;
         this.state.fill(0);
     }
-    _cloneInto(to) {
-        const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
-        to || (to = new Keccak(blockLen, suffix, outputLen, enableXOF, rounds));
-        to.state32.set(this.state32);
-        to.pos = this.pos;
-        to.posOut = this.posOut;
-        to.finished = this.finished;
-        to.rounds = rounds;
-        // Suffix can change in cSHAKE
-        to.suffix = suffix;
-        to.outputLen = outputLen;
-        to.enableXOF = enableXOF;
-        to.destroyed = this.destroyed;
-        return to;
-    }
 }
 
-//import { Keccak } from './sha3.js';
-// NOTE: second modulo is necessary since we don't need to add padding if current element takes whole block
-// Personalization
+const toBytesOptional = (buf) => (buf !== undefined ? (0, toBytes)(buf) : new Uint8Array([]));
 
-// https://keccak.team/files/CSF-0.1.pdf
-// + https://github.com/XKCP/XKCP/tree/master/lib/high/Keccak/PRG
-class KeccakPRG extends Keccak {
-    constructor(capacity) {
-        assertNumber(capacity);
-        // Rho should be full bytes
-        if (capacity < 0 || capacity > 1600 - 10 || (1600 - capacity - 2) % 8)
-            throw new Error('KeccakPRG: Invalid capacity');
-        // blockLen = rho in bytes
-        super((1600 - capacity - 2) / 8, 0, 0, true);
-        this.rate = 1600 - capacity;
-        this.posOut = Math.floor((this.rate + 7) / 8);
-    }
-    keccak() {
-        // Duplex padding
-        this.state[this.pos] ^= 0x01;
-        this.state[this.blockLen] ^= 0x02; // Rho is full bytes
-        super.keccak();
-        this.pos = 0;
-        this.posOut = 0;
+class KangarooTwelve extends Keccak {
+    constructor(blockLen, leafLen, outputLen, rounds, opts) {
+        super(blockLen, 0x07, outputLen, true, rounds);
+        this.leafLen = leafLen;
+        this.chunkLen = 8192;
+        this.chunkPos = 0; // Position of current block in chunk
+        this.chunksDone = 0; // How many chunks we already have
+        const { personalization } = opts;
+        this.personalization = toBytesOptional(personalization);
     }
     update(data) {
-        super.update(data);
-        this.posOut = this.blockLen;
+        data = (0, toBytes)(data);
+        const { chunkLen, blockLen, leafLen, rounds } = this;
+        for (let pos = 0, len = data.length; pos < len;) {
+            if (this.chunkPos == chunkLen) {
+                if (this.leafHash)
+                    super.update(this.leafHash.digest());
+                else {
+                    this.suffix = 0x06; // Its safe to change suffix here since its used only in digest()
+                    super.update(new Uint8Array([3, 0, 0, 0, 0, 0, 0, 0]));
+                }
+                this.leafHash = new Keccak(blockLen, 0x0b, leafLen, false, rounds);
+                this.chunksDone++;
+                this.chunkPos = 0;
+            }
+            const take = Math.min(chunkLen - this.chunkPos, len - pos);
+            const chunk = data.subarray(pos, pos + take);
+            if (this.leafHash)
+                this.leafHash.update(chunk);
+            else
+                super.update(chunk);
+            this.chunkPos += take;
+            pos += take;
+        }
         return this;
     }
-    feed(data) {
-        return this.update(data);
+    finish() {
+        if (this.finished)
+            return;
+        const { personalization } = this;
+        this.update(personalization).update(rightEncodeK12(personalization.length));
+        // Leaf hash
+        if (this.leafHash) {
+            super.update(this.leafHash.digest());
+            super.update(rightEncodeK12(this.chunksDone));
+            super.update(new Uint8Array([0xff, 0xff]));
+        }
+        super.finish.call(this);
     }
-    finish() { }
-    digestInto(out) {
-        throw new Error('KeccakPRG: digest is not allowed, please use .fetch instead.');
-    }
-    fetch(bytes) {
-        return this.xof(bytes);
-    }
-    // Ensure irreversibility (even if state leaked previous outputs cannot be computed)
-    forget() {
-        if (this.rate < 1600 / 2 + 1)
-            throw new Error('KeccakPRG: rate too low to use forget');
-        this.keccak();
-        for (let i = 0; i < this.blockLen; i++)
-            this.state[i] = 0;
-        this.pos = this.blockLen;
-        this.keccak();
-        this.posOut = this.blockLen;
-    }
-    _cloneInto(to) {
-        const { rate } = this;
-        to || (to = new KeccakPRG(1600 - rate));
-        super._cloneInto(to);
-        to.rate = rate;
-        return to;
-    }
-    clone() {
-        return this._cloneInto();
+    destroy() {
+        super.destroy.call(this);
+        if (this.leafHash)
+            this.leafHash.destroy();
+        // We cannot zero personalization buffer since it is user provided and we don't want to mutate user input
+        this.personalization = EMPTY;
     }
 }
-const keccakprg = (capacity = 254) => new KeccakPRG(capacity);
-
 
 
 
@@ -635,11 +628,11 @@ function KangarooTwelveJS() {
 		realBuf : null,
 	};
 	let phase = 1;
-	data.k = keccakprg();
+	data.k = new KangarooTwelve((1600-capacity) / 8, 0, 0, 12, {});
 	var K12 = {
 		init() {
 			//data.k.forget()
-			data.k = keccakprg();			
+			data.k = new KangarooTwelve((1600-capacity) / 8, 0, 0, 12, {});			
 		},
 		drop() {
 			data.keybuf = null;
@@ -649,7 +642,6 @@ function KangarooTwelveJS() {
 		},
 		update(buf) {
 			phase = 2;
-			//console.log( "FEEDING JS SRG:", buf );
 			if( buf instanceof Array ) {
 				if( "number" === typeof buf[0] ) {
 					//buf = buf.join();
@@ -670,7 +662,8 @@ function KangarooTwelveJS() {
 		final() {
 			//data.k.final();
 		},
-		squeeze(n) {			return data.k.fetch( n );
+		squeeze(n) {			
+			return data.k.xof(n);//data.k.fetch( n );
 		},
 		release(buf) {
 		},
@@ -1017,6 +1010,7 @@ SaltyRNG.Shuffler = Shuffler;
 const RNG= SaltyRNG( 
 	(saltbuf)=>saltbuf.push( new Date().toISOString() ));
 const RNG2 = SaltyRNG( getSalt2);
+RNG2.initialEntropy = null;
 
 
 let salt = null;
@@ -1029,10 +1023,10 @@ function getSalt2 (saltbuf) {
 
 SaltyRNG.id = function( s ) {
 	if( s !== undefined ) {
-		//salt = s;
+		salt = s;
 		RNG2.reset();
-		RNG2.feed( "\0\0\0\0");
-		RNG2.feed( s );
+		//RNG2.feed( "\0\0\0\0");
+		//RNG2.feed( s );
 		// this is an ipv6 + UUID
 		return base64ArrayBuffer( RNG2.getBuffer(8*(16+16)) );
 	}

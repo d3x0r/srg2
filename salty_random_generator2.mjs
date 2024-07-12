@@ -1,4 +1,6 @@
-"use strict";
+'use strict';
+
+const _assert = false;
 
 // usage
 //  var RNG = require( "salty_random_generator")( callback }
@@ -37,7 +39,7 @@
 	// variants            - _
 
 
-const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$_'
+const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$_';
 const decodings = { '~':0
 		,'=':0
 		,'$':62
@@ -49,18 +51,10 @@ const decodings = { '~':0
 		,',':63
 };
 const u8xor_code_encodings2 = new Uint8Array( 64* 128 );
-let u8 = '';
 
 for( var x = 0; x < 256; x++ ) {
 	if( x < 64 ) {
 		decodings[encodings[x]] = x;
-		u8 += String.fromCharCode(x);
-	}
-	else if( x < 128 ) {
-		u8 += String.fromCharCode(x);
-	}
-	else {
-		u8 += String.fromCharCode(x);
 	}
 }
 
@@ -85,8 +79,7 @@ export function SaltyRNG(f, opt) {
 
 	function MASK_TOP_MASK(length) {
 		return (0xFF) >>> (8 - (length))
-	};
-
+	}
 	function MY_MASK_MASK(n, length) {
 		return (MASK_TOP_MASK(length) << ((n) & 0x7)) & 0xFF;
 	}
@@ -104,7 +97,8 @@ export function SaltyRNG(f, opt) {
 		feed(buf) {
 			//if( typeof buf === "string" )
 			//	buf = toUTF8Array( buf );
-			k12buf2.update(buf)
+			console.log( "Feed RNG:", buf );
+			k12buf2.update(buf);
 		},
 		saltbuf: [],
 		entropy: null,
@@ -150,13 +144,13 @@ export function SaltyRNG(f, opt) {
 				if(this.available === this.used)
 					needBits();
 				this.total_bits += 8;
-				var result = this.entropy[(this.used) >> 3]
+				var result = this.entropy[(this.used) >> 3];
 				this.used += 8;
 				return result;
 			}
 		},
 		getBits(count, signed) {
-			if( !count ) { count = 32; signed = true } 
+			if( !count ) { count = 32; signed = true; } 
 			if (count > 32)
 				throw "Use getBuffer for more than 32 bits.";
 			var tmp = this.getBuffer_(count);
@@ -176,7 +170,6 @@ export function SaltyRNG(f, opt) {
 			return this.getBuffer_(bits).u8;
 		},
 		getBuffer_(bits) {
-			let _bits = bits;
 			let resultIndex = 0;
 			let resultBits = 0;
 			if( readBufs.length <= bits ) { for( let zz = readBufs.length; zz <= bits; zz++ ) readBufs.push([]); }
@@ -246,24 +239,9 @@ export function SaltyRNG(f, opt) {
 				return resultBuffer;
 			}
 		}
-	}
+	};
 	function needBits() {
 		RNG.saltbuf.length = 0;
-
-		//console.log( "needBits called...",RNG.total_bits , K12_SQUEEZE_LENGTH );
-		//console.log( "BUF IS:", k12buf2.absorbing()?"absorbing":"??", k12buf2.squeezing()?"squeezing":"!!", k12buf2.phase(),( k12buf2.absorbing() || ( RNG.total_bits > K12_SQUEEZE_LENGTH ) ) )
-if(0)
-		if( RNG.total_bits >= K12_SQUEEZE_LENGTH ) {
-			console.log( "haven't used enough bits?" );
-			if( k12buf2.squeezing() ) {
-				console.log( "is squeezing so... reset" );
-	                        //console.log( "Need to init with new entropy (BIT FORCE)" );
-				k12buf2.init();
-				k12buf2.update( RNG.entropy );
-			}
-			k12buf2.final();
-			RNG.used = 0;
-		}
 			if (typeof (RNG.getSalt) === 'function') {
 				RNG.getSalt(RNG.saltbuf);
 				if( RNG.saltbuf.length )
@@ -277,41 +255,9 @@ if(0)
 		}else console.log( "Not squeezing so all is bad?" );
 		RNG.available = RNG.entropy.length * 8;
 		RNG.used = 0;
-	};
+	}	
 	RNG.reset();
 	return RNG;
-}
-
-
-function toUTF8Array(str) {
-    var utf8 = [];
-    for (var i=0; i < str.length; i++) {
-        var charcode = str.charCodeAt(i);
-        if (charcode < 0x80) utf8.push(charcode);
-        else if (charcode < 0x800) {
-            utf8.push(0xc0 | (charcode >> 6),
-                      0x80 | (charcode & 0x3f));
-        }
-        else if (charcode < 0xd800 || charcode >= 0xe000) {
-            utf8.push(0xe0 | (charcode >> 12),
-                      0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f));
-        }
-        // surrogate pair
-        else {
-            i++;
-            // UTF-16 encodes 0x10000-0x10FFFF by
-            // subtracting 0x10000 and splitting the
-            // 20 bits of 0x0-0xFFFFF into two halves
-            charcode = 0x10000 + (((charcode & 0x3ff)<<10)
-                      | (str.charCodeAt(i) & 0x3ff));
-            utf8.push(0xf0 | (charcode >>18),
-                      0x80 | ((charcode>>12) & 0x3f),
-                      0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f));
-        }
-    }
-    return utf8;
 }
 
 
@@ -336,69 +282,15 @@ function utf8ToBytes(str) {
     }
     return new TextEncoder().encode(str);
 }
-/**
- * Concats Uint8Array-s into one; like `Buffer.concat([buf1, buf2])`
- * @example concatBytes(buf1, buf2)
- */
-function concatBytes(...arrays) {
-    if (!arrays.every((a) => a instanceof Uint8Array))
-        throw new Error('Uint8Array list expected');
-    if (arrays.length === 1)
-        return arrays[0];
-    const length = arrays.reduce((a, arr) => a + arr.length, 0);
-    const result = new Uint8Array(length);
-    for (let i = 0, pad = 0; i < arrays.length; i++) {
-        const arr = arrays[i];
-        result.set(arr, pad);
-        pad += arr.length;
-    }
-    return result;
-}
-/**
- * Secure PRNG
- */
-function randomBytes(bytesLength = 32) {
-    return new Uint8Array();
-}
-//# sourceMappingURL=utils.js.map
-
-/**
- * @example hexToBytes('deadbeef')
- */
-function hexToBytes(hex) {
-    if (typeof hex !== 'string') {
-        throw new TypeError('hexToBytes: expected string, got ' + typeof hex);
-    }
-    if (hex.length % 2)
-        throw new Error('hexToBytes: received invalid unpadded hex');
-    const array = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < array.length; i++) {
-        const j = i * 2;
-        const hexByte = hex.slice(j, j + 2);
-        const byte = Number.parseInt(hexByte, 16);
-        if (Number.isNaN(byte) || byte > 0)
-            throw new Error('Invalid byte sequence');
-        array[i] = byte;
-    }
-    return array;
-}
 
 function toBytes(data) {
     if (typeof data === 'string')
         data = utf8ToBytes(data);
-	 if (data instanceof Uint32Array) data = new Uint8Array( data );
     if (!(data instanceof Uint8Array))
         throw new TypeError(`Expected input type is Uint8Array (got ${typeof data})`);
     return data;
 }
-function wrapConstructorWithOpts(hashCons) {
-    const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
-    const tmp = hashCons({});
-    hashC.outputLen = tmp.outputLen;
-    hashC.blockLen = tmp.blockLen;
-    hashC.create = (opts) => hashCons(opts);
-    return hashC;
-}
+
 function assertNumber(n) {
     if (!Number.isSafeInteger(n) || n < 0)
         throw new Error(`Wrong positive integer: ${n}`);
@@ -409,26 +301,12 @@ const u32 = (arr) => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.
 
 class Hash {
     // Safe version that clones internal state
-    clone() {
-        return this._cloneInto();
-    }
-}
-
-function assertBool(b) {
-    if (typeof b !== 'boolean')
-        throw new Error(`Expected boolean, not ${b}`);
 }
 function assertBytes(bytes, ...lengths) {
     if (!(bytes instanceof Uint8Array))
         throw new TypeError('Expected Uint8Array');
     if (lengths.length > 0 && !lengths.includes(bytes.length))
         throw new TypeError(`Expected Uint8Array of length ${lengths}, not of length=${bytes.length}`);
-}
-function assertHash(hash) {
-    if (typeof hash !== 'function' || typeof hash.create !== 'function')
-        throw new Error('Hash should be wrapped by utils.wrapConstructor');
-    assertNumber(hash.outputLen);
-    assertNumber(hash.blockLen);
 }
 function assertExists(instance, checkFinished = true) {
     if (instance.destroyed)
@@ -437,32 +315,14 @@ function assertExists(instance, checkFinished = true) {
         throw new Error('Hash#digest() has already been called');
 }
 function assertOutput(out, instance) {
-    assertBytes(out);
+    _assert && assertBytes(out);
     const min = instance.outputLen;
     if (out.length < min) {
         throw new Error(`digestInto() expects output buffer of length at least ${min}`);
     }
 }
-// For runtime check if class implements interface
-// Check if object doens't have custom constructor (like Uint8Array/Array)
-const isPlainObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]' && obj.constructor === Object;
-function checkOpts(defaults, opts) {
-    if (opts !== undefined && (typeof opts !== 'object' || !isPlainObject(opts)))
-        throw new TypeError('Options should be object or undefined');
-    const merged = Object.assign(defaults, opts);
-    return merged;
-}
-function wrapConstructor(hashConstructor) {
-    const hashC = (message) => hashConstructor().update(toBytes(message)).digest();
-    const tmp = hashConstructor();
-    hashC.outputLen = tmp.outputLen;
-    hashC.blockLen = tmp.blockLen;
-    hashC.create = () => hashConstructor();
-    return hashC;
-}
 
 
-//import { Hash, u32, toBytes, wrapConstructor, wrapConstructorWithOpts, assertBytes, assertNumber, assertExists, assertOutput, } from './utils.js';
 const u64= {
     U32_MASK64 : 2n ** 32n - 1n
     ,fromBig(n, le = false) {
@@ -500,7 +360,7 @@ const u64= {
 // JS uses 32-bit signed integers for bitwise operations which means we cannot
 // simple take carry out of low bit sum by shift, we need to use division.
     , add(Ah, Al, Bh, Bl) {
-        const l = (Al >>> 0) + (Bl >>> 0)
+        const l = (Al >>> 0) + (Bl >>> 0);
         return { h: (Ah + Bh + ((l / 2 ** 32) | 0)) | 0, l: l | 0 }
     }
 // Addition with more than 2 elements
@@ -510,9 +370,9 @@ const u64= {
     , add4H : (low, Ah, Bh, Ch, Dh) => (Ah + Bh + Ch + Dh + ((low / 2 ** 32) | 0)) | 0
     , add5L : (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0) + (El >>> 0)
     , add5H : (low, Ah, Bh, Ch, Dh, Eh) => (Ah + Bh + Ch + Dh + Eh + ((low / 2 ** 32) | 0)) | 0
-}
+};
 Object.freeze( u64);
-//# sourceMappingURL=_u64.js.map
+
 // import * as u64 from './_u64.js';
 
 const [SHA3_PI, SHA3_ROTL, _SHA3_IOTA] = [[], [], []];
@@ -522,6 +382,9 @@ const _2n = BigInt(2);
 const _7n = BigInt(7);
 const _256n = BigInt(256);
 const _0x71n = BigInt(0x71);
+const security = 128;
+const capacity = (2*security);
+
 for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
     // Pi
     [x, y] = [y, (2 * x + 3 * y) % 5];
@@ -538,10 +401,17 @@ for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
     _SHA3_IOTA.push(t);
 }
 const [SHA3_IOTA_H, SHA3_IOTA_L] = u64.split(_SHA3_IOTA, true);
+function rightEncodeK12(n) {
+    const res = [];
+    for (; n > 0; n >>= 8)
+        res.unshift(n & 0xff);
+    res.push(res.length);
+    return new Uint8Array(res);
+}
 
 class Keccak extends Hash {
     // NOTE: we accept arguments in bytes instead of bits here.
-    constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 24) {
+    constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 12) {
         super();
         this.blockLen = blockLen;
         this.suffix = suffix;
@@ -553,7 +423,7 @@ class Keccak extends Hash {
         this.finished = false;
         this.destroyed = false;
         // Can be passed from user as dkLen
-        assertNumber(outputLen);
+        _assert && assertNumber(outputLen);
         // 1600 = 5x5 matrix of 64bit.  1600 bits === 200 bytes
         if (0 >= this.blockLen || this.blockLen >= 200)
             throw new Error('Sha3 supports only keccak-f1600 function');
@@ -613,7 +483,7 @@ class Keccak extends Hash {
         this.pos = 0;
     }
     update(data) {
-        assertExists(this);
+        _assert && assertExists(this);
         const { blockLen, state } = this;
         data = toBytes(data);
         const len = data.length;
@@ -621,14 +491,17 @@ class Keccak extends Hash {
             const take = Math.min(blockLen - this.pos, len - pos);
             for (let i = 0; i < take; i++)
                 state[this.pos++] ^= data[pos++];
-            if (this.pos === blockLen)
+            if (this.pos === blockLen) {
                 this.keccak();
+				}
         }
         return this;
     }
     finish() {
-        if (this.finished)
+        if (this.finished) {
+				console.log( "is already finished??" );
             return;
+			}
         this.finished = true;
         const { state, suffix, pos, blockLen } = this;
         // Do the padding
@@ -639,14 +512,15 @@ class Keccak extends Hash {
         this.keccak();
     }
     writeInto(out) {
-        assertExists(this, false);
-        assertBytes(out);
+        _assert && assertExists(this, false);
+        _assert && assertBytes(out);
         this.finish();
         const bufferOut = this.state;
         const { blockLen } = this;
         for (let pos = 0, len = out.length; pos < len;) {
-            if (this.posOut >= blockLen)
+            if (this.posOut >= blockLen) {
                 this.keccak();
+				}
             const take = Math.min(blockLen - this.posOut, len - pos);
             out.set(bufferOut.subarray(this.posOut, this.posOut + take), pos);
             this.posOut += take;
@@ -661,11 +535,11 @@ class Keccak extends Hash {
         return this.writeInto(out);
     }
     xof(bytes) {
-        assertNumber(bytes);
+        _assert && assertNumber(bytes);
         return this.xofInto(new Uint8Array(bytes));
     }
     digestInto(out) {
-        assertOutput(out, this);
+        _assert && assertOutput(out, this);
         if (this.finished)
             throw new Error('digest() was already called');
         this.writeInto(out);
@@ -679,87 +553,67 @@ class Keccak extends Hash {
         this.destroyed = true;
         this.state.fill(0);
     }
-    _cloneInto(to) {
-        const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
-        to || (to = new Keccak(blockLen, suffix, outputLen, enableXOF, rounds));
-        to.state32.set(this.state32);
-        to.pos = this.pos;
-        to.posOut = this.posOut;
-        to.finished = this.finished;
-        to.rounds = rounds;
-        // Suffix can change in cSHAKE
-        to.suffix = suffix;
-        to.outputLen = outputLen;
-        to.enableXOF = enableXOF;
-        to.destroyed = this.destroyed;
-        return to;
-    }
 }
 
-//import { Keccak } from './sha3.js';
-// NOTE: second modulo is necessary since we don't need to add padding if current element takes whole block
-// Personalization
+const toBytesOptional = (buf) => (buf !== undefined ? (0, toBytes)(buf) : new Uint8Array([]));
 
-// https://keccak.team/files/CSF-0.1.pdf
-// + https://github.com/XKCP/XKCP/tree/master/lib/high/Keccak/PRG
-class KeccakPRG extends Keccak {
-    constructor(capacity) {
-        assertNumber(capacity);
-        // Rho should be full bytes
-        if (capacity < 0 || capacity > 1600 - 10 || (1600 - capacity - 2) % 8)
-            throw new Error('KeccakPRG: Invalid capacity');
-        // blockLen = rho in bytes
-        super((1600 - capacity - 2) / 8, 0, 0, true);
-        this.rate = 1600 - capacity;
-        this.posOut = Math.floor((this.rate + 7) / 8);
-    }
-    keccak() {
-        // Duplex padding
-        this.state[this.pos] ^= 0x01;
-        this.state[this.blockLen] ^= 0x02; // Rho is full bytes
-        super.keccak();
-        this.pos = 0;
-        this.posOut = 0;
+class KangarooTwelve extends Keccak {
+    constructor(blockLen, leafLen, outputLen, rounds, opts) {
+        super(blockLen, 0x07, outputLen, true, rounds);
+        this.leafLen = leafLen;
+        this.chunkLen = 8192;
+        this.chunkPos = 0; // Position of current block in chunk
+        this.chunksDone = 0; // How many chunks we already have
+        const { personalization } = opts;
+        this.personalization = toBytesOptional(personalization);
     }
     update(data) {
-        super.update(data);
-        this.posOut = this.blockLen;
+        data = (0, toBytes)(data);
+        const { chunkLen, blockLen, leafLen, rounds } = this;
+        for (let pos = 0, len = data.length; pos < len;) {
+            if (this.chunkPos == chunkLen) {
+                if (this.leafHash)
+                    super.update(this.leafHash.digest());
+                else {
+                    this.suffix = 0x06; // Its safe to change suffix here since its used only in digest()
+                    super.update(new Uint8Array([3, 0, 0, 0, 0, 0, 0, 0]));
+                }
+                this.leafHash = new Keccak(blockLen, 0x0b, leafLen, false, rounds);
+                this.chunksDone++;
+                this.chunkPos = 0;
+            }
+            const take = Math.min(chunkLen - this.chunkPos, len - pos);
+            const chunk = data.subarray(pos, pos + take);
+            if (this.leafHash)
+                this.leafHash.update(chunk);
+            else
+                super.update(chunk);
+            this.chunkPos += take;
+            pos += take;
+        }
         return this;
     }
-    feed(data) {
-        return this.update(data);
+    finish() {
+        if (this.finished)
+            return;
+        const { personalization } = this;
+        this.update(personalization).update(rightEncodeK12(personalization.length));
+        // Leaf hash
+        if (this.leafHash) {
+            super.update(this.leafHash.digest());
+            super.update(rightEncodeK12(this.chunksDone));
+            super.update(new Uint8Array([0xff, 0xff]));
+        }
+        super.finish.call(this);
     }
-    finish() { }
-    digestInto(out) {
-        throw new Error('KeccakPRG: digest is not allowed, please use .fetch instead.');
-    }
-    fetch(bytes) {
-        return this.xof(bytes);
-    }
-    // Ensure irreversibility (even if state leaked previous outputs cannot be computed)
-    forget() {
-        if (this.rate < 1600 / 2 + 1)
-            throw new Error('KeccakPRG: rate too low to use forget');
-        this.keccak();
-        for (let i = 0; i < this.blockLen; i++)
-            this.state[i] = 0;
-        this.pos = this.blockLen;
-        this.keccak();
-        this.posOut = this.blockLen;
-    }
-    _cloneInto(to) {
-        const { rate } = this;
-        to || (to = new KeccakPRG(1600 - rate));
-        super._cloneInto(to);
-        to.rate = rate;
-        return to;
-    }
-    clone() {
-        return this._cloneInto();
+    destroy() {
+        super.destroy.call(this);
+        if (this.leafHash)
+            this.leafHash.destroy();
+        // We cannot zero personalization buffer since it is user provided and we don't want to mutate user input
+        this.personalization = EMPTY;
     }
 }
-const keccakprg = (capacity = 254) => new KeccakPRG(capacity);
-//# sourceMappingURL=sha3-addons.js.map
 
 
 
@@ -773,15 +627,12 @@ function KangarooTwelveJS() {
 		outbuf : 0,
 		realBuf : null,
 	};
-	var tn = 0;
 	let phase = 1;
-	data.k = keccakprg();
-	//console.log( "??", data.k, Object.getPrototypeOf( data.k ) );
-	var s;
+	data.k = new KangarooTwelve((1600-capacity) / 8, 0, 0, 12, {});
 	var K12 = {
 		init() {
 			//data.k.forget()
-			data.k = keccakprg();			
+			data.k = new KangarooTwelve((1600-capacity) / 8, 0, 0, 12, {});			
 		},
 		drop() {
 			data.keybuf = null;
@@ -791,7 +642,6 @@ function KangarooTwelveJS() {
 		},
 		update(buf) {
 			phase = 2;
-			//console.log( "FEEDING JS SRG:", buf );
 			if( buf instanceof Array ) {
 				if( "number" === typeof buf[0] ) {
 					//buf = buf.join();
@@ -812,8 +662,8 @@ function KangarooTwelveJS() {
 		final() {
 			//data.k.final();
 		},
-		squeeze(n) {  nTotal += n;
-			return data.k.fetch( n );
+		squeeze(n) {			
+			return data.k.xof(n);//data.k.fetch( n );
 		},
 		release(buf) {
 		},
@@ -849,16 +699,12 @@ function KangarooTwelveJS() {
 	return K12;
 }
 
-
-var nTotal = 0;
-
 //-------------- byte xbox ------------------------------
 
 function BlockShuffle_ByteShuffler( ctx ) {
 	//struct byte_shuffle_key *key = New( struct byte_shuffle_key );
 	var key = { map:[], dmap:[] };
 	var n;
-	var srcMap;
 	for( n = 0; n < 256; n++ )
 		key.map[n] = n;
 
@@ -878,38 +724,12 @@ function BlockShuffle_ByteShuffler( ctx ) {
 	return key;
 }
 
-function  BlockShuffle_SubByte( key, bytes_input ) {
-	return key.map[bytes_input];
-}
-function  BlockShuffle_BusByte( key, bytes_input ) {
-	return key.dmap[bytes_input];
-}
-
-function BlockShuffle_SubBytes( key, bytes_input, bytes_output, offset, byteCount ) 
-{
-	var n;
-	const map = key.map;
-	for( n = 0; n < byteCount; n++ ) {
-		bytes_output[offset+n] = map[bytes_input[offset+n]];
-	}
-}
-
-
-function BlockShuffle_BusBytes( key, bytes_input, bytes_output, offset, byteCount ) 
-{
-	var n;
-	const map = key.dmap;
-	for( n = 0; n < byteCount; n++ ) {
-		bytes_output[offset+n] = map[bytes_input[offset+n]];
-	}
-}
-
 //----------------- K12-XBOX Utilities -----------------------------
 
 // bit size of masking hash.
-const RNGHASH = 256
+const RNGHASH = 256;
 const localCiphers = [];
-export function SRG_XSWS_encryptData( objBuf, tick, keyBuf ) {
+function SRG_XSWS_encryptData( objBuf, tick, keyBuf ) {
 	if( objBuf.buffer.byteLength & 0x7 ) {
 		throw new Error( "buffer to encode must be a multiple of 64 bits; (should also include last byte of padding specification)" );
 	}
@@ -918,7 +738,7 @@ export function SRG_XSWS_encryptData( objBuf, tick, keyBuf ) {
 		,  bufKey
 	) {
 		var n;
-		var dolen = outlen/4
+		var dolen = outlen/4;
 		for( n = 0; n < dolen; n++ ) output[n] ^= bufKey [ ((n) % (RNGHASH / 32)) ];
 		var p = 0x55;
 		for( n = 0; n < outlen; n++ )  p = output8[n] = bytKey.map[output8[n] ^ p];
@@ -928,7 +748,7 @@ export function SRG_XSWS_encryptData( objBuf, tick, keyBuf ) {
 
 	var signEntropy = localCiphers.pop();
 	if( !signEntropy ) {
-		signEntropy = SaltyRNG( null, {mode:1} );
+		signEntropy = SaltyRNG( null);
 		signEntropy.initialEntropy = null;
 	}
 	signEntropy.reset();	
@@ -956,7 +776,7 @@ export function SRG_XSWS_encryptData( objBuf, tick, keyBuf ) {
 	return outBuf8;
 }
 
-export function SRG_XSWS_encryptString( objBuf, tick, keyBuf ) {
+function SRG_XSWS_encryptString( objBuf, tick, keyBuf ) {
 	var tickBuf = new Uint32Array( 2 );
 	
 	tickBuf[0] = tick & 0xFFFFFFFF;
@@ -968,7 +788,7 @@ export function SRG_XSWS_encryptString( objBuf, tick, keyBuf ) {
 	return SRG_XSWS_encryptData( ob32, tickBuf, keyBuf );
 }
 
-export function SRG_XSWS_decryptData( objBuf,  tick, keyBuf ) {
+function SRG_XSWS_decryptData( objBuf,  tick, keyBuf ) {
 	function decryptBlock( bytKey
 		, input, offset,  len
 		, output, output8
@@ -986,7 +806,7 @@ export function SRG_XSWS_decryptData( objBuf,  tick, keyBuf ) {
 	
 	var signEntropy = localCiphers.pop();
 	if( !signEntropy ) {
-		signEntropy = SaltyRNG( null, {mode:1} );
+		signEntropy = SaltyRNG( null);
 		signEntropy.initialEntropy = null;
 	}
 	
@@ -1013,7 +833,7 @@ export function SRG_XSWS_decryptData( objBuf,  tick, keyBuf ) {
 	return outBuf;
 }
 
-export function SRG_XSWS_decryptString( objBuf, tick, keyBuf ) {
+function SRG_XSWS_decryptString( objBuf, tick, keyBuf ) {
 	var tickBuf = new Uint32Array( 2 );
 	
 	tickBuf[0] = tick & 0xFFFFFFFF;
@@ -1065,14 +885,11 @@ export function SRG_XSWS_decryptString( objBuf, tick, keyBuf ) {
         // uInt8 ->string
 	function myTextDecoder(buf) {
 		var out = '';
-		var len;
 		for( var n = 0; n < buf.length; n++ ) {
 			if( buf[n] === 0xFF ) break;
 			if( ( buf[n]& 0x80 ) == 0 )
 				out += String.fromCodePoint( buf[n] );
-			else if( ( buf[n] & 0xC0 ) == 0x80 ) {
-				// invalid character... should already be skipped
-			} else if( ( buf[n] & 0xE0 ) == 0xC0 ) {
+			else if( ( buf[n] & 0xC0 ) == 0x80 ) ; else if( ( buf[n] & 0xE0 ) == 0xC0 ) {
 				out += String.fromCodePoint( ( ( buf[n] & 0x1f ) << 6 ) | ( buf[n+1] & 0x3f ) );
 				n++;
 			} else if( ( buf[n] & 0xF0 ) == 0xE0 ) {
@@ -1089,7 +906,7 @@ export function SRG_XSWS_decryptString( objBuf, tick, keyBuf ) {
 		return out;
 	}
 
-export function GetCurrentTick() {
+function GetCurrentTick() {
 	var now = new Date();
 	var tick = now.getTime() * 256;
 	tick |= ( -now.getTimezoneOffset() /15 ) & 0xFF;
@@ -1097,8 +914,7 @@ export function GetCurrentTick() {
 }
 
 
-export function TickToTime( tick ) {
-	var now = new Date( tick / 256 );
+function TickToTime( tick ) {
 }
 
 
@@ -1125,8 +941,6 @@ function Holder() {
     , more : null
   };
 }
-
-var nHolders = 0;
 var holders = [];
 
 function sort(  tree,  number,  r )
@@ -1149,8 +963,6 @@ function sort(  tree,  number,  r )
    }
    return tree;
 }
-
-var nNumber = 0;
 function  FoldTree( tree, numbers, count )
 {
    if( !(count-numbers.length) ) return numbers;
@@ -1180,10 +992,10 @@ function  Shuffle( numbers, count, RNG )
 function Shuffler( opts ) {
 	var RNG;
 	if( opts && opts.salt ) {
-		RNG = SaltyRNG( opts.salt, {mode:1} );
+		RNG = SaltyRNG( opts.salt);
 	}
 	else 
-		RNG = SaltyRNG( shuffleSeeder, {mode:1} );
+		RNG = SaltyRNG( shuffleSeeder);
 	return {
 		shuffle(numbers,count) {
 			 return Shuffle(numbers,count, RNG);
@@ -1196,8 +1008,9 @@ SaltyRNG.Shuffler = Shuffler;
 //----------------------------------------------------------------------------
 
 const RNG= SaltyRNG( 
-	(saltbuf)=>saltbuf.push( new Date().toISOString() ), { mode:1 } );
-const RNG2 = SaltyRNG( getSalt2, { mode:1 } );
+	(saltbuf)=>saltbuf.push( new Date().toISOString() ));
+const RNG2 = SaltyRNG( getSalt2);
+RNG2.initialEntropy = null;
 
 
 let salt = null;
@@ -1210,15 +1023,15 @@ function getSalt2 (saltbuf) {
 
 SaltyRNG.id = function( s ) {
 	if( s !== undefined ) {
-		//salt = s;
+		salt = s;
 		RNG2.reset();
-		RNG2.feed( "\0\0\0\0");
-		RNG2.feed( s );
+		//RNG2.feed( "\0\0\0\0");
+		//RNG2.feed( s );
 		// this is an ipv6 + UUID
 		return base64ArrayBuffer( RNG2.getBuffer(8*(16+16)) );
 	}
    	return base64ArrayBuffer( RNG.getBuffer(8*(16+16)) );
-}
+};
 
 SaltyRNG.Id = function(s) {
     // this is an ipv6 + UUID
@@ -1238,7 +1051,7 @@ SaltyRNG.Id = function(s) {
 	    ID[2] = ( now & 0x0000FF );
 	}
     return base64ArrayBuffer( ID );
-}
+};
 
 SaltyRNG.u16_id = function() {
     // this is an ipv6 + UUID
@@ -1248,7 +1061,7 @@ SaltyRNG.u16_id = function() {
     	out[c] = String.fromCodePoint( ch );
     }
     return out.join('');
-}
+};
 
 function signCheck( buf ) {
 		buf = new Uint8Array(buf);
@@ -1289,14 +1102,9 @@ function signCheck( buf ) {
 		}
 // 167-128 = 39 = 40+ dif == 30 bits in a row approx
 //const overbal = (167-128)
-		const overbal = (167-128)
+		const overbal = (167-128);
                     //console.log( "result:", overbal, longest0, longest1, ones );
 		if( longest0 > 29 || longest1 > 29 || ones > (128+overbal) || ones < (128-overbal) ) {
-                    	if(0)
-			if( ones > ( 128+overbal )|| ones < (128 - overbal) )
-				console.log( "STRMb: %d %d  0s:%d 1s:%d ", longest0, longest1, 256-ones, ones );
-			else
-				console.log( "STRMl: %d %d  0s:%d 1s:%d ", longest0, longest1, 256 - ones, ones );
 			return 1;
 		}
 		return 0;
@@ -1308,12 +1116,9 @@ SaltyRNG.sign = function( msg ) {
 
 		//SRGObject *obj = ObjectWrap::Unwrap<SRGObject>( args.This() );
 		var id;
-		var tries = 0;
-		var state = null;
-		var tmp = new Uint8Array(32);
 		//memcpy( nextSalt, *buf, buf.length() );
 		if( !signEntropy ) {
-			signEntropy = SaltyRNG( null, {mode:1} );
+			signEntropy = SaltyRNG( null);
 			signEntropy.initialEntropy = null;
 		}
 
@@ -1327,23 +1132,18 @@ SaltyRNG.sign = function( msg ) {
 				DecodeBase64Into( nextSalt, id );
 				signEntropy.feed( nextSalt );
 				var bytes = signEntropy.getBuffer( 256 );
-				tries++;
-				if( signCheck( bytes ) ) {
-                                    	//console.log( "ID IS:", nextSalt, bytes );
-					//console.log( "bytes:", new Uint8Array( bytes ) );
-					//console.log( " %d  %s\n", tries, id );
-				} else {
+				if( signCheck( bytes ) ) ; else {
 					id = null;
 				}
 			}
 		} while( !id );
 		return id;
 		
-}
+};
 
 SaltyRNG.verify = function( msg, id  ) {
 		if( !signEntropy ) {
-			signEntropy = SaltyRNG( null, {mode:1} );
+			signEntropy = SaltyRNG( null);
 			signEntropy.initialEntropy = null;
 		}
 		signEntropy.reset();
@@ -1355,50 +1155,50 @@ SaltyRNG.verify = function( msg, id  ) {
 		var bytes = signEntropy.getBuffer( 256 );
 		//console.log( "bytes:", new Uint8Array( bytes ) );
 		return signCheck( bytes );
-}
+};
 
 
 function base64ArrayBuffer(arrayBuffer) {
-  var base64    = ''
+  var base64    = '';
 
-  var bytes         = new Uint8Array(arrayBuffer)
-  var byteLength    = bytes.byteLength
-  var byteRemainder = byteLength % 3
-  var mainLength    = byteLength - byteRemainder
+  var bytes         = new Uint8Array(arrayBuffer);
+  var byteLength    = bytes.byteLength;
+  var byteRemainder = byteLength % 3;
+  var mainLength    = byteLength - byteRemainder;
 
-  var a, b, c, d
-  var chunk
+  var a, b, c, d;
+  var chunk;
   //throw "who's using this?"
   //console.log( "buffer..", arrayBuffer )
   // Main loop deals with bytes in chunks of 3
   for (var i = 0; i < mainLength; i = i + 3) {
     // Combine the three bytes into a single integer
-    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
 
     // Use bitmasks to extract 6-bit segments from the triplet
-    a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
-    b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
-    c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
-    d = chunk & 63               // 63       = 2^6 - 1
+    a = (chunk & 16515072) >> 18; // 16515072 = (2^6 - 1) << 18
+    b = (chunk & 258048)   >> 12; // 258048   = (2^6 - 1) << 12
+    c = (chunk & 4032)     >>  6; // 4032     = (2^6 - 1) << 6
+    d = chunk & 63;               // 63       = 2^6 - 1
 
     // Convert the raw binary segments to the appropriate ASCII encoding
-    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
+    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
   }
 
   // Deal with the remaining bytes and padding
   if (byteRemainder == 1) {
-    chunk = bytes[mainLength]
-    a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
+    chunk = bytes[mainLength];
+    a = (chunk & 252) >> 2; // 252 = (2^6 - 1) << 2
     // Set the 4 least significant bits to zero
-    b = (chunk & 3)   << 4 // 3   = 2^2 - 1
-    base64 += encodings[a] + encodings[b] + '=='
+    b = (chunk & 3)   << 4; // 3   = 2^2 - 1
+    base64 += encodings[a] + encodings[b] + '==';
   } else if (byteRemainder == 2) {
-    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
-    a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
-    b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+    a = (chunk & 64512) >> 10; // 64512 = (2^6 - 1) << 10
+    b = (chunk & 1008)  >>  4; // 1008  = (2^6 - 1) << 4
     // Set the 2 least significant bits to zero
-    c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
-    base64 += encodings[a] + encodings[b] + encodings[c] + '='
+    c = (chunk & 15)    <<  2; // 15    = 2^4 - 1
+    base64 += encodings[a] + encodings[b] + encodings[c] + '=';
   }
   //console.log( "dup?", base64)
   return base64
@@ -1443,11 +1243,6 @@ function DecodeBase64Into( out, buf ) {
 	}
 
 	return out;
-}
-
-function DecodeBase64( buf )
-{
-    return DecodeBase64( null, buf );
 }
 
 
@@ -1552,7 +1347,7 @@ function u8xor_node(a,b) {
 		else if( (v & 0xFE) == 0xFC ) { if( l ) throw new Error( "short utf8 sequence found" ); l = 5; mask=0;  _mask = 0x03; }  // 6(4) + 2 + 0 == 26
 
 		if( mask )
-			outBuf[n] = (v & ~mask ) | ( u8xor_code_encodings2[ ((v & mask)<<7) + (c[(n+o)%(keylen)]) ] & mask )
+			outBuf[n] = (v & ~mask ) | ( u8xor_code_encodings2[ ((v & mask)<<7) + (c[(n+o)%(keylen)]) ] & mask );
 		else
 			outBuf[n] = v;
 	}
@@ -1586,7 +1381,7 @@ function u8xor(a,b) {
 		else if( (v & 0xFE) == 0xFC ) { if( l ) throw new Error( "short utf8 sequence found" ); l = 5; mask=0;  _mask = 0x03; }  // 6(4) + 2 + 0 == 26
 
 		if( mask )
-			outBuf[n] = (v & ~mask ) | ( u8xor_code_encodings2[ ((v & mask)<<7) + (c[(n+o)%(keylen)]) ] & mask )
+			outBuf[n] = (v & ~mask ) | ( u8xor_code_encodings2[ ((v & mask)<<7) + (c[(n+o)%(keylen)]) ] & mask );
 		else
 			outBuf[n] = v;
 	}
@@ -1641,18 +1436,15 @@ if( typeof TextDecoder === "undefined" ) {
 				}
 			}
 			return out;
-		}
+		};
 	}
 	function myTextDecoder() {
 		this.decode = function(buf) {
 			var out = '';
-			var len;
 			for( var n = 0; n < buf.length; n++ ) {
 				if( ( buf[n]& 0x80 ) == 0 )
 					out += String.fromCodePoint( buf[n] );
-				else if( ( buf[n] & 0xC0 ) == 0x80 ) {
-					// invalid character... should already be skipped
-				} else if( ( buf[n] & 0xE0 ) == 0xC0 ) {
+				else if( ( buf[n] & 0xC0 ) == 0x80 ) ; else if( ( buf[n] & 0xE0 ) == 0xC0 ) {
 					out += String.fromCodePoint( ( ( buf[n] & 0x1f ) << 6 ) | ( buf[n+1] & 0x3f ) );
 					n++;
 				} else if( ( buf[n] & 0xF0 ) == 0xE0 ) {
@@ -1667,7 +1459,7 @@ if( typeof TextDecoder === "undefined" ) {
 				}
 			}
 			return out;
-		}
+		};
 	}
 	TD = new myTextDecoder();
 	TE = new myTextEncoder();
@@ -1677,87 +1469,10 @@ else {
 	TE = new TextEncoder();
 }
 
-
-
-if(0)
-if( "undefined" == typeof module || !module.parent ) {
-	if( "undefined" == typeof mgodule || !module.parent ) {
-		var keybuf = new Uint8Array(1);
-		
-		var output = SRG_XSWS_encryptString( "test", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		var input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-		
-		output = SRG_XSWS_encryptString( "test1", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-		
-		output = SRG_XSWS_encryptString( "test12", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-		
-		output = SRG_XSWS_encryptString( "test123", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-		
-		output = SRG_XSWS_encryptString( "test1234", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-		        
-		output = SRG_XSWS_encryptString( "test1235", 123, keybuf );
-		console.log( "ENC OUTPUT? ", output );
-		input = SRG_XSWS_decryptString( output, 123, keybuf );
-		console.log( "DEC OUTPUT? ", input, input.length );
-	}
-
-	console.log( "TEST:", SaltyRNG.id(), SaltyRNG.id("12344") );
-	console.log( "TEST:", SaltyRNG.Id(), SaltyRNG.Id("12344") );
-
-
-        console.log( "Verified:", SaltyRNG.verify( "Hello World", "tmm7PQ5pkw8gYxbvPnBEaKRAexPIesQQJl9Xt9t7xos=" ));
-            /*
-
-STRMb: 4 19  0s:86 1s:170
-ID IS: Uint8Array(32) [
-  182, 105, 187,  61,  14, 105, 147,  15,
-   32,  99,  22, 239,  62, 112,  68, 104,
-  164,  64, 123,  19, 200, 122, 196,  16,
-   38,  95,  87, 183, 219, 123, 198, 139
-] Uint8Array(32) [
-  103,  21,  17, 155, 238,   9, 183,
-  219, 187, 175,  95, 110, 234, 216,
-  188, 250, 248,  67, 173, 254, 172,
-  235, 254, 127, 255, 121, 106, 231,
-   85, 245, 255, 127
-]
- 2327404  tmm7PQ5pkw8gYxbvPnBEaKRAexPIesQQJl9Xt9t7xos=
- */
-	if( false ) {
-        	console.log( "Getting a signature for 'Hello World'..." );
-            const testSignature = SaltyRNG.sign( "Hello World" );
-
-        console.log( "Signature:", testSignature, SaltyRNG.verify( "Hello World", testSignature ) );
-		// there are multiple valid signatures; it's a race to be the first; and tell others about your findings.
-		// 
-	}
-/*
-if( false ) {
-	function test(a,b) {
-		var ab = u8xor(a,{ key:b, step:0 });
-		console.log( "encod: ", a, " ^ ", b, " = ", ab, "==", [...ab].map(c=>c.codePointAt(0)) );
-
-		console.log( "decod: ", ab, " ^ ", b, " = ", u8xor(ab,{ key:b, step:0 }) );
-	}
-
-	// this generates NUL characters...
-	test( " !\"#$%&'()*+,-./0123456789:;<=>?@ABC"
-            , "ghijklmnopqrstuvwxyz0123456789$_ABCDEF....." );
-}
-*/
-
-}
+SaltyRNG.GetCurrentTick = GetCurrentTick;
+SaltyRNG.SRG_XSWS_decryptData = SRG_XSWS_decryptData;
+SaltyRNG.SRG_XSWS_decryptString = SRG_XSWS_decryptString;
+SaltyRNG.SRG_XSWS_encryptData = SRG_XSWS_encryptData;
+SaltyRNG.SRG_XSWS_encryptString = SRG_XSWS_encryptString;
+SaltyRNG.SaltyRNG = SaltyRNG;
+SaltyRNG.TickToTime = TickToTime;

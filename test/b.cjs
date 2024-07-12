@@ -1,5 +1,5 @@
 
-const SRG=require( "../salty_random_generator.cjs" ).SaltyRNG;
+const SRG=require( "../salty_random_generator2.js" ).SaltyRNG;
 //import {SaltyRNG as SRG2} from "./salty_random_generator2.mjs";
 
 
