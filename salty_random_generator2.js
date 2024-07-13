@@ -97,7 +97,6 @@ function SaltyRNG(f, opt) {
 		feed(buf) {
 			//if( typeof buf === "string" )
 			//	buf = toUTF8Array( buf );
-			console.log( "Feed RNG:", buf );
 			k12buf2.update(buf);
 		},
 		saltbuf: [],
@@ -105,7 +104,7 @@ function SaltyRNG(f, opt) {
 		available: 0,
 		used: 0,
 		total_bits : 0,
-		initialEntropy : "test",
+		initialEntropy : null,//"test",
 		save() {
 			return {
 				saltbuf: this.saltbuf.slice(0),
@@ -244,10 +243,13 @@ function SaltyRNG(f, opt) {
 		RNG.saltbuf.length = 0;
 			if (typeof (RNG.getSalt) === 'function') {
 				RNG.getSalt(RNG.saltbuf);
-				if( RNG.saltbuf.length )
+                        	if( RNG.entropy ) {
+					k12buf2.init();
+					k12buf2.update( RNG.entropy.slice( 0, 200 ) );
+                                }
+				if( RNG.saltbuf.length ) {
 					k12buf2.update( RNG.saltbuf );
-				//else console.log( "Skipped updating more salt?" );
-
+				}
 			}
 
 		if( k12buf2.squeezing() ) {
@@ -656,7 +658,6 @@ function KangarooTwelveJS() {
 					//console.log( "Buf join?", buf );
 				}
 			} 
-
 			data.k.update( buf );
 		},
 		final() {
@@ -1476,3 +1477,5 @@ exports.SRG_XSWS_encryptData = SRG_XSWS_encryptData;
 exports.SRG_XSWS_encryptString = SRG_XSWS_encryptString;
 exports.SaltyRNG = SaltyRNG;
 exports.TickToTime = TickToTime;
+exports.base64ArrayBuffer = base64ArrayBuffer;
+

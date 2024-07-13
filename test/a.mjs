@@ -1,5 +1,5 @@
 
-import {SaltyRNG as SRG } from "./salty_random_generator2.mjs";
+import {SaltyRNG as SRG } from "../salty_random_generator2.mjs";
 //import {SaltyRNG as SRG2} from "./salty_random_generator2.mjs";
 
 

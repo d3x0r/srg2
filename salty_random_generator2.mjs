@@ -70,7 +70,7 @@ Object.freeze( decodings );
 //Object.freeze( u8xor_code_encodings2 );
 
 
-export function SaltyRNG(f, opt) {
+function SaltyRNG(f, opt) {
 
 	const readBufs = [];
 	const K12_SQUEEZE_LENGTH = 32768;
@@ -97,7 +97,6 @@ export function SaltyRNG(f, opt) {
 		feed(buf) {
 			//if( typeof buf === "string" )
 			//	buf = toUTF8Array( buf );
-			console.log( "Feed RNG:", buf );
 			k12buf2.update(buf);
 		},
 		saltbuf: [],
@@ -105,7 +104,7 @@ export function SaltyRNG(f, opt) {
 		available: 0,
 		used: 0,
 		total_bits : 0,
-		initialEntropy : "test",
+		initialEntropy : null,//"test",
 		save() {
 			return {
 				saltbuf: this.saltbuf.slice(0),
@@ -244,10 +243,13 @@ export function SaltyRNG(f, opt) {
 		RNG.saltbuf.length = 0;
 			if (typeof (RNG.getSalt) === 'function') {
 				RNG.getSalt(RNG.saltbuf);
-				if( RNG.saltbuf.length )
+                        	if( RNG.entropy ) {
+					k12buf2.init();
+					k12buf2.update( RNG.entropy.slice( 0, 200 ) );
+                                }
+				if( RNG.saltbuf.length ) {
 					k12buf2.update( RNG.saltbuf );
-				//else console.log( "Skipped updating more salt?" );
-
+				}
 			}
 
 		if( k12buf2.squeezing() ) {
@@ -656,7 +658,6 @@ function KangarooTwelveJS() {
 					//console.log( "Buf join?", buf );
 				}
 			} 
-
 			data.k.update( buf );
 		},
 		final() {
@@ -1469,10 +1470,12 @@ else {
 	TE = new TextEncoder();
 }
 
-SaltyRNG.GetCurrentTick = GetCurrentTick;
-SaltyRNG.SRG_XSWS_decryptData = SRG_XSWS_decryptData;
-SaltyRNG.SRG_XSWS_decryptString = SRG_XSWS_decryptString;
-SaltyRNG.SRG_XSWS_encryptData = SRG_XSWS_encryptData;
-SaltyRNG.SRG_XSWS_encryptString = SRG_XSWS_encryptString;
-SaltyRNG.SaltyRNG = SaltyRNG;
-SaltyRNG.TickToTime = TickToTime;
+export {GetCurrentTick};
+export {SRG_XSWS_decryptData};
+export {SRG_XSWS_decryptString};
+export {SRG_XSWS_encryptData};
+export {SRG_XSWS_encryptString};
+export {SaltyRNG};
+export {TickToTime};
+export {base64ArrayBuffer};
+
