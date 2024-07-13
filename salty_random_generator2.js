@@ -325,55 +325,6 @@ function assertOutput(out, instance) {
 }
 
 
-const u64= {
-    U32_MASK64 : 2n ** 32n - 1n
-    ,fromBig(n, le = false) {
-        if (le)
-            return { h: Number(n & u64.U32_MASK64), l: Number((n >> 32n) & u64.U32_MASK64) };
-        return { h: Number((n >> 32n) & u64.U32_MASK64) | 0, l: Number(n & u64.U32_MASK64) | 0 };
-    }
-    , split(lst, le = false) {
-        let [Ah, Al] = [new Uint32Array(lst.length), new Uint32Array(lst.length)];
-        for (let i = 0; i < lst.length; i++) {
-            const { h, l } = u64.fromBig(lst[i], le);
-            [Ah[i], Al[i]] = [h, l];
-        }
-        return [Ah, Al];
-    }
-    , toBig : (h, l) => (BigInt(h >>> 0) << 32n) | BigInt(l >>> 0)
-// for Shift in [0, 32)
-    , shrSH : (h, l, s) => h >>> s
-    , shrSL : (h, l, s) => (h << (32 - s)) | (l >>> s)
-// Right rotate for Shift in [1, 32)
-    , rotrSH : (h, l, s) => (h >>> s) | (l << (32 - s))
-    , rotrSL : (h, l, s) => (h << (32 - s)) | (l >>> s)
-// Right rotate for Shift in (32, 64), NOTE: 32 is special case.
-    , rotrBH : (h, l, s) => (h << (64 - s)) | (l >>> (s - 32))
-    , rotrBL : (h, l, s) => (h >>> (s - 32)) | (l << (64 - s))
-// Right rotate for shift=:=32 (just swaps l&h)
-    , rotr32H : (h, l) => l
-    , rotr32L : (h, l) => h
-// Left rotate for Shift in [1, 32)
-//    , rotlSH : (h, l, s) => (h << s) | (l >>> (32 - s))
-//    , rotlSL : (h, l, s) => (l << s) | (h >>> (32 - s))
-// Left rotate for Shift in (32, 64), NOTE: 32 is special case.
-//    , rotlBH : (h, l, s) => (l << (s - 32)) | (h >>> (64 - s))
-//    , rotlBL : (h, l, s) => (h << (s - 32)) | (l >>> (64 - s))
-// JS uses 32-bit signed integers for bitwise operations which means we cannot
-// simple take carry out of low bit sum by shift, we need to use division.
-    , add(Ah, Al, Bh, Bl) {
-        const l = (Al >>> 0) + (Bl >>> 0);
-        return { h: (Ah + Bh + ((l / 2 ** 32) | 0)) | 0, l: l | 0 }
-    }
-// Addition with more than 2 elements
-    , add3L : (Al, Bl, Cl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0)
-    , add3H : (low, Ah, Bh, Ch) => (Ah + Bh + Ch + ((low / 2 ** 32) | 0)) | 0
-    , add4L : (Al, Bl, Cl, Dl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0)
-    , add4H : (low, Ah, Bh, Ch, Dh) => (Ah + Bh + Ch + Dh + ((low / 2 ** 32) | 0)) | 0
-    , add5L : (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0) + (El >>> 0)
-    , add5H : (low, Ah, Bh, Ch, Dh, Eh) => (Ah + Bh + Ch + Dh + Eh + ((low / 2 ** 32) | 0)) | 0
-};
-Object.freeze( u64);
 
 // import * as u64 from './_u64.js';
 
@@ -402,7 +353,15 @@ for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
     }
     _SHA3_IOTA.push(t);
 }
-const [SHA3_IOTA_H, SHA3_IOTA_L] = u64.split(_SHA3_IOTA, true);
+
+const SHA3_IOTA_H = new Uint32Array(_SHA3_IOTA.length);
+const SHA3_IOTA_L = new Uint32Array(_SHA3_IOTA.length); 
+for (let i = 0; i < _SHA3_IOTA.length; i++) {
+		SHA3_IOTA_H[i] = Number((_SHA3_IOTA[i]) & (2n ** 32n - 1n))
+		SHA3_IOTA_L[i] = Number(((_SHA3_IOTA[i]) >> 32n) & (2n ** 32n - 1n))
+}
+
+
 function rightEncodeK12(n) {
     const res = [];
     for (; n > 0; n >>= 8)
