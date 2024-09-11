@@ -113,5 +113,7 @@ ALL: [Module: null prototype] {
 
 
 # Changelog
+- 1.0.1
+   - Added tests to make sure the generator worked the same as the C version. Made some compatibility fixes.
 - 1.0.0 
    - Initial version
