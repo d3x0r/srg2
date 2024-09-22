@@ -16,13 +16,12 @@
     "url": "git+https://github.com/d3x0r/srg2.git"
   },
   "keywords": [
-    "PRNG",
-    "zero-dependancy"
+    "PRNG","crypt","decrypt","hash","kangaroo-twelve"
   ],
   "author": "d3x0r",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/d3x0r/srg2/issues"
   },
-  "homepage": "https://github.com/d3x0r/srg#readme"
+  "homepage": "https://github.com/d3x0r/srg2#readme"
 }

@@ -3,7 +3,10 @@
 const _assert = false;
 
 // usage
-//  var RNG = require( "salty_random_generator")( callback }
+//  var RNG = require( "@d3x0r/srg2")( callback }
+//  import {SaltyRNG} from "@d3x0r/srg2"
+//  import {SaltyRNG} from "/node_modules/@d3x0r/srg2/salty_random_generator.mjs"
+//
 //    constructor callback is used as a source of salt to the generator
 //    the callback is passed an array to which strings are expected to be added
 //     ( [] )=>{ [].push( more_salt ); }
