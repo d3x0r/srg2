@@ -20,7 +20,7 @@ This may be included as either a esm module or cjs module.
 ```
   var SRG = require( '@d3x0r/srg2' );
   var RNG = SRG.SaltyRNG( saltingCallback );
-  function saltingCallback( salt ) {
+  function sal( salt ) {
       //salt is an array.
       // push objects into the array to be used for next random generation
       // some things one might use - new Date().getTime()
@@ -45,8 +45,6 @@ RNG.saltbuf = [] // the array that is used to communicate salt when more random 
 
 
 ## RNG Methods
-
-(some added in 1.2.1)
 
 |method|return|args|description|
 |---|---|---|---|
@@ -114,6 +112,8 @@ ALL: [Module: null prototype] {
 
 # Changelog
 - 1.0.1
+   - Allow blank string as salt.
    - Added tests to make sure the generator worked the same as the C version. Made some compatibility fixes.
+   - tested long streams of multiple blocks of bits; should be identifical to C version, but srg has a different default entropy.
 - 1.0.0 
    - Initial version

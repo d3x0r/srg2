@@ -975,10 +975,10 @@ RNG2.initialEntropy = null;
 
 let salt = null;
 function getSalt2 (saltbuf) {
-    if( salt ) {
-        saltbuf.push( salt );
-        salt = null;
-    }
+	if( salt !== undefined && salt !== null ) {
+		saltbuf.push( salt );
+		salt = null;
+	}
 }
 
 SaltyRNG.id = function( s ) {
@@ -994,8 +994,8 @@ SaltyRNG.id = function( s ) {
 };
 
 SaltyRNG.Id = function(s) {
-    // this is an ipv6 + UUID
-    let ID;
+	// this is an ipv6 + UUID
+	let ID;
 	if( s !== undefined ) {
 		salt = s;
 		RNG2.reset();
@@ -1003,24 +1003,24 @@ SaltyRNG.Id = function(s) {
 		ID = RNG2.getBuffer(8*(12));
 	}
 	else {
-    		ID = RNG.getBuffer(8*(12));
-                // 1 second marker
-	    const now = ( Date.now() / 1000 ) | 0;
-	    ID[0] = ( now & 0xFF0000 ) >> 16;
-	    ID[1] = ( now & 0x00FF00 ) >> 8;
-	    ID[2] = ( now & 0x0000FF );
+		ID = RNG.getBuffer(8*(12));
+		// 1 second marker
+		const now = ( Date.now() / 1000 ) | 0;
+		ID[0] = ( now & 0xFF0000 ) >> 16;
+		ID[1] = ( now & 0x00FF00 ) >> 8;
+		ID[2] = ( now & 0x0000FF );
 	}
-    return base64ArrayBuffer( ID );
+	return base64ArrayBuffer( ID );
 };
 
 SaltyRNG.u16_id = function() {
-    // this is an ipv6 + UUID
-    var out = [];
-    for( var c = 0; c < 25; c++ ) {
-    	var ch = RNG.getBits( 10 ); if( ch < 32 ) ch |= 64;
-    	out[c] = String.fromCodePoint( ch );
-    }
-    return out.join('');
+	// this is an ipv6 + UUID
+	var out = [];
+	for( var c = 0; c < 25; c++ ) {
+		var ch = RNG.getBits( 10 ); if( ch < 32 ) ch |= 64;
+		out[c] = String.fromCodePoint( ch );
+	}
+	return out.join('');
 };
 
 function signCheck( buf ) {

@@ -975,7 +975,7 @@ RNG2.initialEntropy = null;
 
 let salt = null;
 function getSalt2 (saltbuf) {
-    if( salt ) {
+    if( salt !== undefined && salt !== null ) {
         saltbuf.push( salt );
         salt = null;
     }
