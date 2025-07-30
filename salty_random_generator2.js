@@ -304,9 +304,6 @@ const u32 = (arr) => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.
 //import { toBytes, wrapConstructorWithOpts, assertNumber, u32, } from './utils.js';
 
 
-class Hash {
-    // Safe version that clones internal state
-}
 function assertBytes(bytes, ...lengths) {
     if (!(bytes instanceof Uint8Array))
         throw new TypeError('Expected Uint8Array');
@@ -373,7 +370,7 @@ function rightEncodeK12(n) {
     return new Uint8Array(res);
 }
 
-class Keccak extends Hash {
+class Keccak {
     // NOTE: we accept arguments in bytes instead of bits here.
     constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 12) {
         super();
