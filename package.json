@@ -1,6 +1,6 @@
 {
   "name": "@d3x0r/srg2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Salty Random Genertor2 is a PRNG that uses user supplied strings and typed arrays to generate randomness.",
   "main": "salty_random_generator2.js",
   "module": "salty_random_generator2.mjs",

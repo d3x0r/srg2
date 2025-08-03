@@ -111,6 +111,8 @@ ALL: [Module: null prototype] {
 
 
 # Changelog
+- 1.0.2
+   - clean up empty base class.
 - 1.0.1
    - Allow blank string as salt.
    - Added tests to make sure the generator worked the same as the C version. Made some compatibility fixes.
