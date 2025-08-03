@@ -373,7 +373,6 @@ function rightEncodeK12(n) {
 class Keccak {
     // NOTE: we accept arguments in bytes instead of bits here.
     constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 12) {
-        super();
         this.blockLen = blockLen;
         this.suffix = suffix;
         this.outputLen = outputLen;
